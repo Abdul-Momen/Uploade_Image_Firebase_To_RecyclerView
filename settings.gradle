@@ -1,0 +1,2 @@
+include ':app'
+rootProject.name='Uploade Image Firebase To RecyclerView'

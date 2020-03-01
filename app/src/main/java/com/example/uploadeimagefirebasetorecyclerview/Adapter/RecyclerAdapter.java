@@ -44,7 +44,12 @@ public  class RecyclerAdapter extends RecyclerView.Adapter<RecyclerAdapter.Recyc
         holder.nameTextView.setText(currentTeacher.getName());
         holder.descriptionTextView.setText(currentTeacher.getDescription());
         holder.dateTextView.setText(getDateToday());
-        Picasso.with(mContext).load(currentTeacher.getImageUrl()).into(holder.teacherImageView);
+
+        Picasso.get()
+                .load(currentTeacher.getImageUrl())
+                .fit()
+                .centerCrop()
+                .into(holder.teacherImageView);
 
     }
 

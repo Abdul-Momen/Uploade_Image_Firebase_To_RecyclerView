@@ -44,6 +44,7 @@ public class UploadActivity extends AppCompatActivity {
     private DatabaseReference mDatabaseRef;
 
     private StorageTask mUploadTask;
+    String url;
 
 
     @Override
@@ -54,12 +55,13 @@ public class UploadActivity extends AppCompatActivity {
         chooseImageBtn = findViewById(R.id.button_choose_image);
         uploadBtn = findViewById(R.id.uploadBtn);
         nameEditText = findViewById(R.id.nameEditText);
-        descriptionEditText = findViewById ( R.id.descriptionEditText );
+        descriptionEditText = findViewById(R.id.descriptionEditText);
         chosenImageView = findViewById(R.id.chosenImageView);
         uploadProgressBar = findViewById(R.id.progress_bar);
 
         mStorageRef = FirebaseStorage.getInstance().getReference("teachers_uploads");
         mDatabaseRef = FirebaseDatabase.getInstance().getReference("teachers_uploads");
+
 
         chooseImageBtn.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -96,7 +98,13 @@ public class UploadActivity extends AppCompatActivity {
                 && data != null && data.getData() != null) {
             mImageUri = data.getData();
 
-            Picasso.with(this).load(mImageUri).into(chosenImageView);
+
+            Picasso.get()
+                    .load(mImageUri)
+                    .fit()
+                    .centerCrop()
+                    .into(chosenImageView);
+
         }
     }
 
@@ -109,36 +117,25 @@ public class UploadActivity extends AppCompatActivity {
 
     private void uploadFile() {
         if (mImageUri != null) {
-            StorageReference fileReference = mStorageRef.child(System.currentTimeMillis()
+            final StorageReference fileReference = mStorageRef.child(System.currentTimeMillis()
                     + "." + getFileExtension(mImageUri));
 
             uploadProgressBar.setVisibility(View.VISIBLE);
             uploadProgressBar.setIndeterminate(true);
 
-            mUploadTask = fileReference.putFile(mImageUri)
+           fileReference.putFile(mImageUri)
                     .addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
                         @Override
                         public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-                            Handler handler = new Handler();
-                            handler.postDelayed(new Runnable() {
+                            fileReference.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
                                 @Override
-                                public void run() {
-                                    uploadProgressBar.setVisibility(View.VISIBLE);
-                                    uploadProgressBar.setIndeterminate(false);
-                                    uploadProgressBar.setProgress(0);
+                                public void onSuccess(Uri uri) {
+                                    url = uri.toString();
+                                    Toast.makeText(UploadActivity.this, "" + url, Toast.LENGTH_LONG).show();
+                                    uploadImage(url);
                                 }
-                            }, 500);
+                            });
 
-                            Toast.makeText(UploadActivity.this, "Teacher  Upload successful", Toast.LENGTH_LONG).show();
-                            Teacher upload = new Teacher(nameEditText.getText().toString().trim(),
-                                    taskSnapshot.getMetadata().getReference().getDownloadUrl().toString(),
-                                    descriptionEditText.getText ().toString ());
-
-                            String uploadId = mDatabaseRef.push().getKey();
-                            mDatabaseRef.child(uploadId).setValue(upload);
-
-                            uploadProgressBar.setVisibility(View.INVISIBLE);
-                            openImagesActivity ();
 
                         }
                     })
@@ -160,7 +157,29 @@ public class UploadActivity extends AppCompatActivity {
             Toast.makeText(this, "You haven't Selected Any file selected", Toast.LENGTH_SHORT).show();
         }
     }
-    private void openImagesActivity(){
+
+    private void uploadImage(String mainUrl) {
+
+        uploadProgressBar.setVisibility(View.VISIBLE);
+        uploadProgressBar.setIndeterminate(false);
+        uploadProgressBar.setProgress(0);
+
+
+        Toast.makeText(UploadActivity.this, "Teacher  Upload successful", Toast.LENGTH_LONG).show();
+
+        Teacher upload = new Teacher(nameEditText.getText().toString().trim(),
+                mainUrl,
+                descriptionEditText.getText().toString());
+
+        String uploadId = mDatabaseRef.push().getKey();
+        mDatabaseRef.child(uploadId).setValue(upload);
+
+
+        uploadProgressBar.setVisibility(View.INVISIBLE);
+        openImagesActivity();
+    }
+
+    private void openImagesActivity() {
         Intent intent = new Intent(this, MainActivity.class);
         startActivity(intent);
     }

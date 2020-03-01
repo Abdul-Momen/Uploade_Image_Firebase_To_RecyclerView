@@ -60,11 +60,17 @@ public class DetailsActivity extends AppCompatActivity {
         descriptionDetailTextView.setText(description);
         dateDetailTextView.setText("DATE: "+getDateToday());
         categoryDetailTextView.setText("CATEGORY: "+getRandomCategory());
-        Picasso.with(this)
+/*        Picasso.with(this)
+                .load(imageURL)
+
+                .into(teacherDetailImageView);*/
+
+        Picasso.get()
                 .load(imageURL)
                 .fit()
                 .centerCrop()
                 .into(teacherDetailImageView);
+
 
     }
 }
